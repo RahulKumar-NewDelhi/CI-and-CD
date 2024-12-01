@@ -1,0 +1,30 @@
+pipelines:
+  branches:
+    main:  # Trigger pipeline only for changes in the 'main' branch
+      - step:
+          name: "Build Sphinx Documentation"
+          image: commander121/sphinx:8.1d-b1
+          script:
+            - echo "Building Sphinx documentation.."
+            - cd docs  # Navigate to the Sphinx `docs` directory
+            - make html  # Build the HTML documentation
+            - ls -la build/html
+            - echo "Pipeline completed successfully."
+          artifacts:
+            - docs/build/html/**
+      - step:
+          name: Deploy to rahulkumar.bitbucket.io
+          image: atlassian/default-image:2
+          deployment: production
+          script:
+            - git config --global user.email "rahul.kumar@genotypic.co.in"
+            - git config --global user.name "Rahul Kumar"
+            - git clone https://rahul-786@bitbucket.org/rahul-786/rahulkumar.bitbucket.io.git deploy-repo
+            - cd deploy-repo
+            - rm -rf *
+            - ls -la ../docs/.
+            - cp -r ../docs/build/html/* .
+            - git add --all
+            - git commit -m "Auto-deployed updated documentation from Commander Wiki"
+            - git push https://rahul-786:vNGFzCmA3pv4qXZSTYyX@bitbucket.org/rahul-786/rahulkumar.bitbucket.io.git main
+
